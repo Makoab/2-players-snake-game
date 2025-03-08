@@ -1,204 +1,237 @@
 import turtle
 import time
 import random
-#screen stuff
-screen= turtle.Screen()
+
+# Screen setup
+screen = turtle.Screen()
 screen.tracer(0)
 screen.title("Snake Game")
 screen.bgcolor('black')
-screen.setup(600,600)
+screen.setup(600, 600)
 
-#snakes stuff
-snake1=turtle.Turtle()
-snake1.shape('square')
-snake1.color('white')
-snake1.speed(0)
-snake1.penup()
-snake1.goto(-200,0)
-snake1.direction='stop'
+# Score tracking (now directly represents apples eaten)
+score1, score2 = 0, 0
 
-snake2=turtle.Turtle()
-snake2.shape('square')
-snake2.color('yellow')
-snake2.speed(0)
-snake2.penup()
-snake2.goto(200,0)
-snake2.direction='stop'
+def update_score():
+    score_display.clear()
+    score_display.write(f"Player 1: {score1}  Player 2: {score2}", align="center", font=("Courier", 16, "normal"))
 
-#apple stuff
-apple=turtle.Turtle()
+# Snake creation
+def create_snake(color, start_x):
+    snake = turtle.Turtle()
+    snake.shape('square')
+    snake.color(color)
+    snake.speed(0)
+    snake.penup()
+    snake.goto(start_x, 0)
+    snake.direction = 'stop'
+    return snake
+
+snake1 = create_snake('white', -200)
+snake2 = create_snake('yellow', 200)
+
+# Apple setup
+apple = turtle.Turtle()
 apple.shape('circle')
 apple.color('red')
 apple.speed(0)
 apple.penup()
-apple.goto(0,0)
-apple.direction='stop'
+apple.goto(0, 100)  # Start apple away from snakes
 
-# Score display setup
+# Score display
 score_display = turtle.Turtle()
 score_display.speed(0)
 score_display.color('lightgreen')
 score_display.penup()
 score_display.hideturtle()
 score_display.goto(0, 260)
+update_score()
 
-def up():
-	if snake1.direction!='down':
-		snake1.direction='up'
-def up2():
-	if snake2.direction!='down':
-		snake2.direction='up'
-def down():
-	if snake1.direction!='up':
-		snake1.direction='down'
-def down2():
-	if snake2.direction!='up':
-		snake2.direction='down'
-def right():
-	if snake1.direction!='left':
-		snake1.direction='right'
-def right2():
-	if snake2.direction!='left':
-		snake2.direction='right'
-def left():
-	if snake1.direction!='right':
-		snake1.direction='left'
-def left2():
-	if snake2.direction!='right':
-		snake2.direction='left'
-# two console
+# Movement functions
+def go_up1():
+    if snake1.direction != 'down':
+        snake1.direction = 'up'
+
+def go_down1():
+    if snake1.direction != 'up':
+        snake1.direction = 'down'
+
+def go_right1():
+    if snake1.direction != 'left':
+        snake1.direction = 'right'
+
+def go_left1():
+    if snake1.direction != 'right':
+        snake1.direction = 'left'
+
+def go_up2():
+    if snake2.direction != 'down':
+        snake2.direction = 'up'
+
+def go_down2():
+    if snake2.direction != 'up':
+        snake2.direction = 'down'
+
+def go_right2():
+    if snake2.direction != 'left':
+        snake2.direction = 'right'
+
+def go_left2():
+    if snake2.direction != 'right':
+        snake2.direction = 'left'
+
+def move(snake):
+    if snake.direction == 'up':
+        snake.sety(snake.ycor() + 20)
+    elif snake.direction == 'down':
+        snake.sety(snake.ycor() - 20)
+    elif snake.direction == 'right':
+        snake.setx(snake.xcor() + 20)
+    elif snake.direction == 'left':
+        snake.setx(snake.xcor() - 20)
+    
+    # Wrap-around feature
+    if snake.xcor() > 290:
+        snake.setx(-290)
+    elif snake.xcor() < -290:
+        snake.setx(290)
+    if snake.ycor() > 290:
+        snake.sety(-290)
+    elif snake.ycor() < -290:
+        snake.sety(290)
+
+# Key bindings - Using direct function references instead of lambda
 screen.listen()
-screen.onkeypress(up,'w')
-screen.onkeypress(down,'s')
-screen.onkeypress(right,'d')
-screen.onkeypress(left,'a')
+screen.onkeypress(go_up1, 'w')    # Changed to direct function reference
+screen.onkeypress(go_down1, 's')  # Changed to direct function reference
+screen.onkeypress(go_right1, 'd') # Changed to direct function reference
+screen.onkeypress(go_left1, 'a')  # Changed to direct function reference
+screen.onkeypress(go_up2, 'Up')
+screen.onkeypress(go_down2, 'Down')
+screen.onkeypress(go_right2, 'Right')
+screen.onkeypress(go_left2, 'Left')
 
-screen.onkeypress(up2,'Up')
-screen.onkeypress(down2,'Down')
-screen.onkeypress(right2,'Right')
-screen.onkeypress(left2,'Left')
+# Snake body lists
+parts1, parts2 = [], []
 
-def move():
-	if snake1.direction=='up':
-		y=snake1.ycor()
-		snake1.sety(y+20)
-	if snake1.direction =='down':
-		y = snake1.ycor()
-		snake1.sety(y - 20)
-	if snake1.direction =='right':
-		x = snake1.xcor()
-		snake1.setx(x + 20)
-	if snake1.direction =='left':
-		x = snake1.xcor()
-		snake1.setx(x - 20)
+def reset_snake(snake, parts, start_x):
+    # Reset snake position
+    snake.goto(start_x, 0)
+    snake.direction = 'stop'
+    
+    # Clear body parts
+    for part in parts:
+        part.goto(2000, 2000)  # Move off-screen
+        part.hideturtle()  # Hide the turtle
+    parts.clear()
 
-def move2():
-	if snake2.direction=='up':
-		y=snake2.ycor()
-		snake2.sety(y+20)
-	if snake2.direction =='down':
-		y = snake2.ycor()
-		snake2.sety(y - 20)
-	if snake2.direction =='right':
-		x = snake2.xcor()
-		snake2.setx(x + 20)
-	if snake2.direction =='left':
-		x = snake2.xcor()
-		snake2.setx(x - 20)
+def check_tail_collision(snake, parts):
+    # Check if snake collides with its own tail
+    for part in parts:
+        if part.distance(snake) < 20:
+            return True
+    return False
 
-# Function to display the winner
-def display_winner(winner):
-    score_display.write(f"Player {winner} Wins!", align="center", font=("Courier", 24, "normal"))
-    score_display.clear()
-# Function to reset the game
-def reset_game(winner):
-	display_winner(winner)
-	time.sleep(2)# Pause for 2 seconds to show the winner
-	snake1.goto(-200, 0)
-	snake2.goto(200, 0)
-	apple.goto(0, 0)
-	snake1.direction = 'stop'
-	snake2.direction = 'stop'
+def check_head_collision(snake1, snake2):
+    # Check if snake heads collide
+    if snake1.distance(snake2) < 20:
+        return True
+    return False
 
-	for part in parts:
-		part.goto(2000, 2000)
-	parts.clear()
+def grow_snake(snake, parts, color, amount=1):
+    for _ in range(amount):
+        new_part = turtle.Turtle()
+        new_part.speed(0)
+        new_part.shape('square')
+        new_part.penup()
+        new_part.color(color)
+        new_part.hideturtle()  # Initially hidden until positioned
+        parts.append(new_part)
 
-	for part2 in parts2:
-		part2.goto(2000, 2000)
-	parts2.clear()
+def update_body(parts, snake):
+    for i in range(len(parts) - 1, 0, -1):
+        x, y = parts[i - 1].xcor(), parts[i - 1].ycor()
+        parts[i].goto(x, y)
+        parts[i].showturtle()  # Make sure it's visible after positioning
+    
+    if parts:
+        parts[0].goto(snake.xcor(), snake.ycor())
+        parts[0].showturtle()
 
 # Main game loop
-parts=[]
-parts2=[]
 while True:
-	screen.update()
-
-	# corner limit
-	if snake1.xcor()>290 or snake1.xcor()<-290 or snake1.ycor()>290 or snake1.ycor()<-290:
-		reset_game(2)
-	if snake2.xcor()>290 or snake2.xcor()<-290 or snake2.ycor()>290 or snake2.ycor()<-290:
-		reset_game(1)
-
-
-	#snake eat apple and grow
-	if snake1.distance(apple)<20:
-		x= random.randint(-290,290)
-		y= random.randint(-290,290)
-		apple.goto(x,y)
-		newPart=turtle.Turtle()
-		newPart.speed(0)
-		newPart.shape('square')
-		newPart.penup()
-		newPart.color('white')
-		parts.append(newPart)
-	for i in range(len(parts)-1,0,-1):
-		x=parts[i-1].xcor()
-		y=parts[i-1].ycor()
-		parts[i].goto(x,y)
-	if len(parts)>0:
-		x=snake1.xcor()
-		y=snake1.ycor()
-		parts[0].goto(x,y)
-
-	move()
-	#when snake hits own tail, snake'll die
-	for i in parts:
-		if i.distance(snake1)<20:
-			reset_game(2)
-	for i in parts:
-		if i.distance(snake2)<20:
-			reset_game(1)
-
-	if snake2.distance(apple) < 20:
-		x = random.randint(-290, 290)
-		y = random.randint(-290, 290)
-		apple.goto(x, y)
-		newPart2 = turtle.Turtle()
-		newPart2.speed(0)
-		newPart2.shape('square')
-		newPart2.penup()
-		newPart2.color('yellow')
-		parts2.append(newPart2)
-	for i in range(len(parts2)-1,0,-1):
-		x=parts2[i-1].xcor()
-		y=parts2[i-1].ycor()
-		parts2[i].goto(x,y)
-	if len(parts2)>0:
-		x=snake2.xcor()
-		y=snake2.ycor()
-		parts2[0].goto(x,y)
-
-	move2()
-	for i in parts2:
-		if i.distance(snake2)<20:
-			reset_game(1)
-	for i in parts2:
-		if i.distance(snake1)<20:
-			reset_game(2)
-
-
-	#screen time
-	time.sleep(0.1)
-
-
+    screen.update()
+    
+    # Move and update body first
+    update_body(parts1, snake1)
+    update_body(parts2, snake2)
+    
+    # Then move the heads
+    move(snake1)
+    move(snake2)
+    
+    # Check if snakes eat apple
+    if snake1.distance(apple) < 20:
+        apple.goto(random.randint(-280, 280), random.randint(-280, 280))
+        grow_snake(snake1, parts1, 'white')
+        score1 += 1  # Increase score directly when eating an apple
+        update_score()
+    
+    if snake2.distance(apple) < 20:
+        apple.goto(random.randint(-280, 280), random.randint(-280, 280))
+        grow_snake(snake2, parts2, 'yellow')
+        score2 += 1  # Increase score directly when eating an apple
+        update_score()
+    
+    # Check for tail collisions
+    if check_tail_collision(snake1, parts1[1:]):  # Skip head position
+        reset_snake(snake1, parts1, -200)
+        score1 = 0  # Reset score when dying
+        update_score()
+    
+    if check_tail_collision(snake2, parts2[1:]):  # Skip head position
+        reset_snake(snake2, parts2, 200)
+        score2 = 0  # Reset score when dying
+        update_score()
+    
+    # Check for collisions with opponent's tail
+    for part in parts2:
+        if part.distance(snake1) < 20:
+            reset_snake(snake1, parts1, -200)
+            score1 = 0  # Reset score when dying
+            update_score()
+            break
+    
+    for part in parts1:
+        if part.distance(snake2) < 20:
+            reset_snake(snake2, parts2, 200)
+            score2 = 0  # Reset score when dying
+            update_score()
+            break
+    
+    # Check for head-to-head collision
+    if check_head_collision(snake1, snake2):
+        # Determine which snake is bigger based on score/length
+        if score1 > score2:
+            # Snake 1 eats Snake 2
+            reset_snake(snake2, parts2, 200)
+            
+            # Transfer points (grow snake1 by snake2's score)
+            grow_snake(snake1, parts1, 'white', score2)
+            score1 += score2  # Add opponent's score
+            score2 = 0        # Reset opponent's score
+            update_score()
+                
+        elif score2 > score1:
+            # Snake 2 eats Snake 1
+            reset_snake(snake1, parts1, -200)
+            
+            # Transfer points (grow snake2 by snake1's score)
+            grow_snake(snake2, parts2, 'yellow', score1)
+            score2 += score1  # Add opponent's score
+            score1 = 0        # Reset opponent's score
+            update_score()
+                
+        # If scores are equal, nothing happens - they pass through each other
+    
+    time.sleep(0.1)
